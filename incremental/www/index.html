@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://jsonplaceholder.typicode.com data:; script-src 'self' https://jsonplaceholder.typicode.com 'unsafe-inline'; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content: blob:;">
+        <meta name="format-detection" content="telephone=no">
+        <meta name="msapplication-tap-highlight" content="no">
+        <meta name="viewport" content="initial-scale=1, width=device-width, viewport-fit=cover">
+        <meta name="color-scheme" content="light dark">
+        <link rel="stylesheet" href="css/index.css">
+        <title>Granja de Ovejas</title>
+    </head>
+    <body>
+        <div class="shell">
+            <div id="game-area">
+                <div id="sheep" aria-label="Oveja">
+                    <div class="ear left"></div>
+                    <div class="ear right"></div>
+                    <div class="face">
+                        <div class="nose"></div>
+                        <div class="mouth"></div>
+                        <div class="eye left"></div>
+                        <div class="eye right"></div>
+                        <div class="blush left"></div>
+                        <div class="blush right"></div>
+                    </div>
+                    <div class="leg back-left"></div>
+                    <div class="leg back-right"></div>
+                    <div class="leg front-left"></div>
+                    <div class="leg front-right"></div>
+                </div>
+            </div>
+
+            <div class="overlay top-left">
+                <section class="hud">
+                    <div class="stat">
+                        <p class="label">Lana</p>
+                        <p class="value" id="score">0</p>
+                    </div>
+                    <div class="stat">
+                        <p class="label">Nivel</p>
+                        <p class="value" id="level">1</p>
+                    </div>
+                    <div class="stat">
+                        <p class="label">Por clic</p>
+                        <p class="value" id="per-catch">1</p>
+                    </div>
+                    <div class="stat">
+                        <p class="label">Costo mejora</p>
+                        <p class="value" id="upgrade-cost">5</p>
+                    </div>
+                    <div class="stat">
+                        <p class="label">Pasivo/seg</p>
+                        <p class="value" id="passive-income">0</p>
+                    </div>
+                    <div class="stat">
+                        <p class="label">Multiplicador</p>
+                        <p class="value" id="multiplier">x1</p>
+                    </div>
+                    <div class="stat">
+                        <p class="label">Bonus</p>
+                        <p class="value" id="bonus">x1.0</p>
+                    </div>
+                </section>
+            </div>
+
+            <div class="overlay controls-overlay">
+                <section class="controls">
+                    <button id="shear-btn" class="primary">Esquilar oveja</button>
+                    <button id="upgrade-btn" class="ghost">Mejorar tijeras</button>
+                    <button id="refresh-bonus" class="secondary">Refrescar bonus (AJAX)</button>
+                </section>
+            </div>
+
+            <div class="overlay top-right">
+                <div class="info-card">
+                    <p class="eyebrow">Mini incremental</p>
+                    <h1>Granja de ovejas</h1>
+                    <p class="lede">Haz clic en la oveja para esquilarla, vende lana y mejora tus tijeras. El bonus diario llega por AJAX.</p>
+                    <div class="badge" id="api-status">Bonus API: buscando...</div>
+                </div>
+            </div>
+
+            <div class="overlay bottom-right">
+                <section class="log" id="log"></section>
+            </div>
+
+            <nav class="menu-bar">
+                <button class="edge-btn" id="menu-play">Jugar</button>
+                <button class="edge-btn" id="menu-challenges">Desafíos</button>
+                <button class="edge-btn" id="menu-store">Tienda</button>
+                <button class="edge-btn" id="menu-options">Opciones</button>
+            </nav>
+
+            <!-- Modal Jugar -->
+            <div id="modal-play" class="modal hidden">
+                <div class="modal-content">
+                    <h2>Tu Granja 🐑</h2>
+                    <p>Esquila la oveja, compra mejoras y conviértete en un magnate de la lana.</p>
+                    <div class="stats-display">
+                        <p>Lana actual: <strong id="play-wool">0</strong></p>
+                        <p>Nivel: <strong id="play-level">1</strong></p>
+                        <p>Lana total ganada: <strong id="play-total-wool">0</strong></p>
+                        <p>Clics realizados: <strong id="play-clicks">0</strong></p>
+                        <p>Por clic: <strong id="play-per-click">1</strong></p>
+                        <p>Ingresos pasivos: <strong id="play-passive">0</strong>/seg</p>
+                        <p>Multiplicador: <strong id="play-multiplier">x1</strong></p>
+                        <p>Bonus: <strong id="play-bonus">x1.0</strong></p>
+                    </div>
+                    <button class="primary" id="btn-close-play">Volver a jugar</button>
+                    <button class="ghost" id="btn-reset-game">Resetear todo</button>
+                </div>
+            </div>
+
+            <!-- Modal Desafíos -->
+            <div id="modal-challenges" class="modal hidden">
+                <div class="modal-content">
+                    <h2>Desafíos</h2>
+                    <div id="challenges-list"></div>
+                    <button class="ghost" id="btn-close-challenges">Cerrar</button>
+                </div>
+            </div>
+
+            <!-- Modal Tienda -->
+            <div id="modal-store" class="modal hidden">
+                <div class="modal-content">
+                    <h2>Tienda</h2>
+                    <p>Lana disponible: <strong id="store-wool">0</strong></p>
+                    <div id="store-items"></div>
+                    <button class="ghost" id="btn-close-store">Cerrar</button>
+                </div>
+            </div>
+
+            <!-- Modal Opciones -->
+            <div id="modal-options" class="modal hidden">
+                <div class="modal-content">
+                    <h2>Opciones</h2>
+                    <div class="option-item">
+                        <label>
+                            <input type="checkbox" id="sound-toggle" checked> Sonido
+                        </label>
+                    </div>
+                    <div class="option-item">
+                        <label>
+                            <input type="checkbox" id="animations-toggle" checked> Animaciones
+                        </label>
+                    </div>
+                    <div class="option-item">
+                        <p>Versión: 1.0</p>
+                    </div>
+                    <button class="ghost" id="btn-close-options">Cerrar</button>
+                </div>
+            </div>
+        </div>
+        <script src="js/index.js" defer></script>
+    </body>
+</html>
