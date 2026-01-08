@@ -36,6 +36,8 @@ const state = {
     lastClickTime: 0,
 };
 
+const modalInstances = {};
+
 function formatLana(value) {
     const v = Math.max(0, value);
     if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(2)}B`;
@@ -73,6 +75,7 @@ function setupGame() {
     const menuOptions = document.getElementById('menu-options');
 
     console.log('Elementos:', { sheep, shearBtn, upgradeBtn, refreshBtn });
+    initMaterialize();
 
     // Clic directo en botón esquilar
     if (shearBtn) {
@@ -143,6 +146,15 @@ function setupGame() {
 
     updateHud();
     console.log('setupGame completado');
+}
+
+function initMaterialize() {
+    if (window.M && M.Modal) {
+        document.querySelectorAll('.modal').forEach((modalEl) => {
+            const instance = M.Modal.init(modalEl, { dismissible: true, endingTop: '10%' });
+            modalInstances[modalEl.id] = instance;
+        });
+    }
 }
 
 function shearSheep() {
@@ -279,32 +291,38 @@ function addLog(text) {
 // Modal functions
 function openModal(modalId) {
     const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.remove('hidden');
-        
-        // Actualizar contenido específico por modal
-        if (modalId === 'modal-play') {
-            document.getElementById('play-wool').textContent = formatLana(state.wool);
-            document.getElementById('play-level').textContent = state.level;
-            document.getElementById('play-total-wool').textContent = formatLana(state.totalWoolEarned);
-            document.getElementById('play-clicks').textContent = state.totalClicks;
-            document.getElementById('play-per-click').textContent = formatLana(state.perClick);
-            document.getElementById('play-passive').textContent = formatLana(state.passiveIncome);
-            document.getElementById('play-multiplier').textContent = `x${state.multiplier.toFixed(1)}`;
-            document.getElementById('play-bonus').textContent = `x${state.bonus.toFixed(1)}`;
-        } else if (modalId === 'modal-store') {
-            document.getElementById('store-wool').textContent = formatLana(state.wool);
-            populateStore();
-        } else if (modalId === 'modal-challenges') {
-            populateChallenges();
-        } else if (modalId === 'modal-options') {
-            const soundToggle = document.getElementById('sound-toggle');
-            const animToggle = document.getElementById('animations-toggle');
-            soundToggle.checked = localStorage.getItem('soundEnabled') !== 'false';
-            animToggle.checked = localStorage.getItem('animationsEnabled') !== 'false';
-        }
-        
-        // Cerrar al hacer clic en el fondo oscuro (fuera del modal)
+    if (!modal) return;
+
+    modal.classList.remove('hidden');
+    const instance = modalInstances[modalId];
+    if (instance) {
+        instance.open();
+    }
+    
+    // Actualizar contenido específico por modal
+    if (modalId === 'modal-play') {
+        document.getElementById('play-wool').textContent = formatLana(state.wool);
+        document.getElementById('play-level').textContent = state.level;
+        document.getElementById('play-total-wool').textContent = formatLana(state.totalWoolEarned);
+        document.getElementById('play-clicks').textContent = state.totalClicks;
+        document.getElementById('play-per-click').textContent = formatLana(state.perClick);
+        document.getElementById('play-passive').textContent = formatLana(state.passiveIncome);
+        document.getElementById('play-multiplier').textContent = `x${state.multiplier.toFixed(1)}`;
+        document.getElementById('play-bonus').textContent = `x${state.bonus.toFixed(1)}`;
+    } else if (modalId === 'modal-store') {
+        document.getElementById('store-wool').textContent = formatLana(state.wool);
+        populateStore();
+    } else if (modalId === 'modal-challenges') {
+        populateChallenges();
+    } else if (modalId === 'modal-options') {
+        const soundToggle = document.getElementById('sound-toggle');
+        const animToggle = document.getElementById('animations-toggle');
+        soundToggle.checked = localStorage.getItem('soundEnabled') !== 'false';
+        animToggle.checked = localStorage.getItem('animationsEnabled') !== 'false';
+    }
+    
+    if (!instance) {
+        // Cerrar al hacer clic en el fondo oscuro (fuera del modal) solo para fallback manual
         modal.addEventListener('click', function closeOnOverlay(e) {
             if (e.target === modal) {
                 closeModal(modalId);
@@ -316,9 +334,13 @@ function openModal(modalId) {
 
 function closeModal(modalId) {
     const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.add('hidden');
+    if (!modal) return;
+
+    const instance = modalInstances[modalId];
+    if (instance) {
+        instance.close();
     }
+    modal.classList.add('hidden');
 }
 
 function resetGame() {
@@ -373,7 +395,7 @@ function populateStore() {
         `;
         
         const btn = document.createElement('button');
-        btn.className = state.wool >= item.cost ? 'primary store-item-btn' : 'ghost store-item-btn';
+        btn.className = `${state.wool >= item.cost ? 'primary' : 'ghost'} store-item-btn btn waves-effect`;
         btn.textContent = 'Comprar';
         btn.disabled = state.wool < item.cost;
         btn.addEventListener('click', () => buyItem(idx));

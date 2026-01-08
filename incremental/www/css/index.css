@@ -114,11 +114,14 @@ body {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
+    max-width: 560px;
+    width: 100%;
     background: linear-gradient(135deg, #6f451b 0%, #8b5723 100%);
     padding: 12px;
     border-radius: 16px;
     box-shadow: 0 10px 24px rgba(57, 33, 12, 0.28);
     border: 2px solid #cfa15f;
+    justify-content: center;
 }
 button {
     border: none;
@@ -209,12 +212,16 @@ button:focus-visible { outline: 2px solid #e9c16a; outline-offset: 2px; }
     display: flex;
     gap: 10px;
     padding: 10px 12px;
+    max-width: 500px;
+    width: calc(100% - 24px);
     background: linear-gradient(135deg, #6f451b 0%, #8b5723 100%);
     border: 2px solid #cfa15f;
     border-radius: 20px;
     box-shadow: 0 12px 26px rgba(57, 33, 12, 0.32);
     z-index: 7;
     pointer-events: auto;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 .edge-btn {
     background: linear-gradient(135deg, #e7c27a, #cfa15f);
