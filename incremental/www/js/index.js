@@ -29,6 +29,11 @@ const state = {
     level: 1,
     multiplier: 1,
     passiveBuffer: 0,
+    critChance: 0.1,
+    critMultiplier: 2,
+    comboCount: 0,
+    comboMultiplier: 1,
+    lastClickTime: 0,
 };
 
 function formatLana(value) {
@@ -51,6 +56,8 @@ function initGame() {
     setupGame();
     fetchBonus();
     startPassiveIncome();
+    startWindfallEvents();
+    startComboDecay();
 }
 
 function setupGame() {
@@ -140,21 +147,37 @@ function setupGame() {
 
 function shearSheep() {
     console.log('shearSheep llamada');
-    const gain = Math.round(state.perClick * state.bonus * state.multiplier);
-    console.log('Ganancia:', gain, 'perClick:', state.perClick, 'bonus:', state.bonus);
+    const now = Date.now();
+    const withinCombo = state.lastClickTime && (now - state.lastClickTime) < 2000;
+    if (withinCombo) {
+        state.comboCount += 1;
+    } else {
+        state.comboCount = 1;
+    }
+    state.lastClickTime = now;
+    const prevComboMultiplier = state.comboMultiplier;
+    state.comboMultiplier = Math.min(1 + 0.1 * (state.comboCount - 1), 3); // hasta x3
+    if (state.comboMultiplier > prevComboMultiplier) {
+        addLog(`Combo x${state.comboMultiplier.toFixed(1)} (+${state.comboCount} golpes)`);
+    }
+
+    const isCrit = Math.random() < state.critChance;
+    const critFactor = isCrit ? state.critMultiplier : 1;
+    const gain = Math.round(state.perClick * state.bonus * state.multiplier * critFactor * state.comboMultiplier);
+    console.log('Ganancia:', gain, 'perClick:', state.perClick, 'bonus:', state.bonus, 'critico:', isCrit);
     state.wool += gain;
     state.totalWoolEarned += gain;
     state.totalClicks += 1;
     console.log('Lana total:', state.wool);
     animateSheep();
     updateHud();
-    addLog(`+${gain} lana`);
+    addLog(isCrit ? `¡CRÍTICO! +${formatLana(gain)} lana` : `+${formatLana(gain)} lana`);
     checkLevelUp();
     
     // Efecto visual flotante
     const sheep = document.getElementById('sheep');
     const rect = sheep.getBoundingClientRect();
-    showFloatingText(`+${gain}`, rect.left + rect.width / 2, rect.top);
+    showFloatingText(isCrit ? `★+${formatLana(gain)}` : `+${formatLana(gain)}`, rect.left + rect.width / 2, rect.top);
 }
 
 function animateSheep() {
@@ -237,6 +260,10 @@ function updateHud() {
     document.getElementById('level').textContent = state.level;
     document.getElementById('passive-income').textContent = formatLana(state.passiveIncome);
     document.getElementById('multiplier').textContent = `x${state.multiplier.toFixed(1)}`;
+    const comboEl = document.getElementById('combo');
+    if (comboEl) {
+        comboEl.textContent = state.comboMultiplier > 1 ? `x${state.comboMultiplier.toFixed(1)}` : 'x1.0';
+    }
 }
 
 function addLog(text) {
@@ -306,6 +333,9 @@ function resetGame() {
         state.level = 1;
         state.multiplier = 1;
         state.passiveBuffer = 0;
+        state.comboCount = 0;
+        state.comboMultiplier = 1;
+        state.lastClickTime = 0;
         state.bonus = 1;
         updateHud();
         closeModal('modal-play');
@@ -430,6 +460,35 @@ function startPassiveIncome() {
                 state.passiveBuffer -= whole;
                 updateHud();
             }
+        }
+    }, 1000);
+}
+
+function startWindfallEvents() {
+    setInterval(() => {
+        const base = 25 + Math.random() * 75; // 25 a 100 lana base
+        const bonus = base * state.multiplier * state.bonus;
+        const gain = Math.max(1, Math.round(bonus));
+        state.wool += gain;
+        state.totalWoolEarned += gain;
+        updateHud();
+        addLog(`¡Recompensa del campo! +${formatLana(gain)} lana`);
+        const sheep = document.getElementById('sheep');
+        if (sheep) {
+            const rect = sheep.getBoundingClientRect();
+            showFloatingText(`🍀 +${formatLana(gain)}`, rect.left + rect.width / 2, rect.top - 10);
+        }
+    }, 15000);
+}
+
+function startComboDecay() {
+    setInterval(() => {
+        const now = Date.now();
+        const idle = now - state.lastClickTime;
+        if (state.comboCount > 0 && idle > 2000) {
+            state.comboCount = 0;
+            state.comboMultiplier = 1;
+            updateHud();
         }
     }, 1000);
 }

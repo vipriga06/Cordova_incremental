@@ -20,11 +20,12 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://jsonplaceholder.typicode.com data:; script-src 'self' https://jsonplaceholder.typicode.com 'unsafe-inline'; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content: blob:;">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://jsonplaceholder.typicode.com data:; script-src 'self' https://jsonplaceholder.typicode.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; media-src *; img-src 'self' data: content: blob:;">
         <meta name="format-detection" content="telephone=no">
         <meta name="msapplication-tap-highlight" content="no">
         <meta name="viewport" content="initial-scale=1, width=device-width, viewport-fit=cover">
         <meta name="color-scheme" content="light dark">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
         <link rel="stylesheet" href="css/index.css">
         <title>Granja de Ovejas</title>
     </head>
@@ -76,6 +77,10 @@
                         <p class="value" id="multiplier">x1</p>
                     </div>
                     <div class="stat">
+                        <p class="label">Combo</p>
+                        <p class="value" id="combo">x1.0</p>
+                    </div>
+                    <div class="stat">
                         <p class="label">Bonus</p>
                         <p class="value" id="bonus">x1.0</p>
                     </div>
@@ -84,9 +89,9 @@
 
             <div class="overlay controls-overlay">
                 <section class="controls">
-                    <button id="shear-btn" class="primary">Esquilar oveja</button>
-                    <button id="upgrade-btn" class="ghost">Mejorar tijeras</button>
-                    <button id="refresh-bonus" class="secondary">Refrescar bonus (AJAX)</button>
+                    <button id="shear-btn" class="primary btn waves-effect waves-light">Esquilar oveja</button>
+                    <button id="upgrade-btn" class="ghost btn waves-effect">Mejorar tijeras</button>
+                    <button id="refresh-bonus" class="secondary btn waves-effect">Refrescar bonus (AJAX)</button>
                 </section>
             </div>
 
@@ -104,10 +109,10 @@
             </div>
 
             <nav class="menu-bar">
-                <button class="edge-btn" id="menu-play">Jugar</button>
-                <button class="edge-btn" id="menu-challenges">Desafíos</button>
-                <button class="edge-btn" id="menu-store">Tienda</button>
-                <button class="edge-btn" id="menu-options">Opciones</button>
+                <button class="edge-btn btn-small waves-effect" id="menu-play">Jugar</button>
+                <button class="edge-btn btn-small waves-effect" id="menu-challenges">Desafíos</button>
+                <button class="edge-btn btn-small waves-effect" id="menu-store">Tienda</button>
+                <button class="edge-btn btn-small waves-effect" id="menu-options">Opciones</button>
             </nav>
 
             <!-- Modal Jugar -->
@@ -125,8 +130,8 @@
                         <p>Multiplicador: <strong id="play-multiplier">x1</strong></p>
                         <p>Bonus: <strong id="play-bonus">x1.0</strong></p>
                     </div>
-                    <button class="primary" id="btn-close-play">Volver a jugar</button>
-                    <button class="ghost" id="btn-reset-game">Resetear todo</button>
+                    <button class="primary btn waves-effect waves-light modal-close" id="btn-close-play">Volver a jugar</button>
+                    <button class="ghost btn waves-effect" id="btn-reset-game">Resetear todo</button>
                 </div>
             </div>
 
@@ -135,7 +140,7 @@
                 <div class="modal-content">
                     <h2>Desafíos</h2>
                     <div id="challenges-list"></div>
-                    <button class="ghost" id="btn-close-challenges">Cerrar</button>
+                    <button class="ghost btn waves-effect modal-close" id="btn-close-challenges">Cerrar</button>
                 </div>
             </div>
 
@@ -145,7 +150,7 @@
                     <h2>Tienda</h2>
                     <p>Lana disponible: <strong id="store-wool">0</strong></p>
                     <div id="store-items"></div>
-                    <button class="ghost" id="btn-close-store">Cerrar</button>
+                    <button class="ghost btn waves-effect modal-close" id="btn-close-store">Cerrar</button>
                 </div>
             </div>
 
@@ -155,21 +160,22 @@
                     <h2>Opciones</h2>
                     <div class="option-item">
                         <label>
-                            <input type="checkbox" id="sound-toggle" checked> Sonido
+                            <input type="checkbox" class="filled-in" id="sound-toggle" checked> Sonido
                         </label>
                     </div>
                     <div class="option-item">
                         <label>
-                            <input type="checkbox" id="animations-toggle" checked> Animaciones
+                            <input type="checkbox" class="filled-in" id="animations-toggle" checked> Animaciones
                         </label>
                     </div>
                     <div class="option-item">
                         <p>Versión: 1.0</p>
                     </div>
-                    <button class="ghost" id="btn-close-options">Cerrar</button>
+                    <button class="ghost btn waves-effect modal-close" id="btn-close-options">Cerrar</button>
                 </div>
             </div>
         </div>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js" defer></script>
         <script src="js/index.js" defer></script>
     </body>
 </html>
