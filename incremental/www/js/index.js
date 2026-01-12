@@ -34,6 +34,9 @@ const state = {
     comboCount: 0,
     comboMultiplier: 1,
     lastClickTime: 0,
+    marketPrice: 1.0,
+    dailyEvent: null,
+    motivationalQuote: '',
 };
 
 const modalInstances = {};
@@ -57,6 +60,9 @@ document.addEventListener('deviceready', initGame, false);
 function initGame() {
     setupGame();
     fetchBonus();
+    fetchMarketPrice();
+    fetchDailyEvent();
+    fetchMotivationalQuote();
     startPassiveIncome();
     startWindfallEvents();
     startComboDecay();
@@ -98,6 +104,21 @@ function setupGame() {
     }
     if (refreshBtn) {
         refreshBtn.addEventListener('click', fetchBonus);
+    }
+
+    const marketBtn = document.getElementById('refresh-market');
+    if (marketBtn) {
+        marketBtn.addEventListener('click', fetchMarketPrice);
+    }
+
+    const eventBtn = document.getElementById('refresh-event');
+    if (eventBtn) {
+        eventBtn.addEventListener('click', fetchDailyEvent);
+    }
+
+    const quoteBtn = document.getElementById('refresh-quote');
+    if (quoteBtn) {
+        quoteBtn.addEventListener('click', fetchMotivationalQuote);
     }
 
     menuPlay?.addEventListener('click', () => openModal('modal-play'));
@@ -175,8 +196,9 @@ function shearSheep() {
 
     const isCrit = Math.random() < state.critChance;
     const critFactor = isCrit ? state.critMultiplier : 1;
-    const gain = Math.round(state.perClick * state.bonus * state.multiplier * critFactor * state.comboMultiplier);
-    console.log('Ganancia:', gain, 'perClick:', state.perClick, 'bonus:', state.bonus, 'critico:', isCrit);
+    const eventFactor = state.dailyEvent ? state.dailyEvent.value : 1.0;
+    const gain = Math.round(state.perClick * state.bonus * state.multiplier * critFactor * state.comboMultiplier * eventFactor);
+    console.log('Ganancia:', gain, 'perClick:', state.perClick, 'bonus:', state.bonus, 'evento:', eventFactor, 'critico:', isCrit);
     state.wool += gain;
     state.totalWoolEarned += gain;
     state.totalClicks += 1;
@@ -262,6 +284,188 @@ function handleBonusError() {
     statusEl.textContent = 'Bonus API: sin conexion';
     document.getElementById('bonus').textContent = 'x1.0';
     addLog('No se pudo obtener bonus, usando x1.0.');
+}
+
+// === FUNCIONALIDADES AJAX ADICIONALES ===
+
+// Precio de Mercado Dinámico
+function fetchMarketPrice() {
+    const statusEl = document.getElementById('market-status');
+    const priceEl = document.getElementById('market-price');
+    
+    if (!statusEl || !priceEl) {
+        console.warn('Elementos de mercado no encontrados en DOM');
+        setTimeout(fetchMarketPrice, 500);
+        return;
+    }
+    
+    statusEl.textContent = 'Mercado: consultando...';
+
+    const xhr = new XMLHttpRequest();
+    // Usamos un endpoint aleatorio para simular variación de precios
+    const randomId = Math.floor(Math.random() * 100) + 1;
+    xhr.open('GET', `https://jsonplaceholder.typicode.com/users/${randomId}`);
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                    const data = JSON.parse(xhr.responseText);
+                    // Calculamos precio basado en datos del usuario
+                    const basePrice = (data.id % 10) * 0.15;
+                    state.marketPrice = 0.7 + basePrice; // Rango: 0.7 a 2.05
+                    const priceText = state.marketPrice.toFixed(2);
+                    statusEl.textContent = `Mercado: $${priceText}/lana`;
+                    document.getElementById('market-price').textContent = `$${priceText}`;
+                    
+                    const trend = state.marketPrice > 1.3 ? '📈' : state.marketPrice < 1.0 ? '📉' : '➡️';
+                    addLog(`Precio de mercado actualizado: $${priceText} ${trend}`);
+                } catch (err) {
+                    handleMarketError();
+                }
+            } else {
+                handleMarketError();
+            }
+        }
+    };
+    xhr.onerror = handleMarketError;
+    xhr.send();
+}
+
+function handleMarketError() {
+    const statusEl = document.getElementById('market-status');
+    const priceEl = document.getElementById('market-price');
+    state.marketPrice = 1.0;
+    if (statusEl) statusEl.textContent = 'Mercado: $1.00/lana';
+    if (priceEl) priceEl.textContent = '$1.00';
+    console.log('Error al consultar mercado, usando precio por defecto.');
+}
+
+// Evento del Día
+function fetchDailyEvent() {
+    const statusEl = document.getElementById('event-status');
+    const nameEl = document.getElementById('event-name');
+    const effectEl = document.getElementById('event-effect');
+    
+    if (!statusEl || !nameEl || !effectEl) {
+        console.warn('Elementos de evento no encontrados en DOM');
+        setTimeout(fetchDailyEvent, 500);
+        return;
+    }
+    
+    statusEl.textContent = 'Evento: cargando...';
+
+    const xhr = new XMLHttpRequest();
+    const randomId = Math.floor(Math.random() * 100) + 1;
+    xhr.open('GET', `https://jsonplaceholder.typicode.com/posts/${randomId}`);
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                    const data = JSON.parse(xhr.responseText);
+                    const events = [
+                        { name: '☀️ Día soleado', effect: 'bonus', value: 1.3 },
+                        { name: '🌧️ Lluvia', effect: 'penalty', value: 0.8 },
+                        { name: '🎉 Festival', effect: 'bonus', value: 1.5 },
+                        { name: '🦊 Zorro cerca', effect: 'penalty', value: 0.9 },
+                        { name: '🌈 Día perfecto', effect: 'bonus', value: 1.2 },
+                        { name: '❄️ Frío extremo', effect: 'penalty', value: 0.85 },
+                        { name: '🎪 Feria local', effect: 'bonus', value: 1.4 },
+                        { name: '⚡ Tormenta', effect: 'penalty', value: 0.7 },
+                    ];
+                    
+                    const eventIndex = data.id % events.length;
+                    state.dailyEvent = events[eventIndex];
+                    
+                    statusEl.textContent = `Evento: ${state.dailyEvent.name}`;
+                    document.getElementById('event-name').textContent = state.dailyEvent.name;
+                    
+                    const effectText = state.dailyEvent.effect === 'bonus' ? 
+                        `+${((state.dailyEvent.value - 1) * 100).toFixed(0)}%` : 
+                        `${((state.dailyEvent.value - 1) * 100).toFixed(0)}%`;
+                    document.getElementById('event-effect').textContent = effectText;
+                    
+                    addLog(`Evento del día: ${state.dailyEvent.name}`);
+                } catch (err) {
+                    handleEventError();
+                }
+            } else {
+                handleEventError();
+            }
+        }
+    };
+    xhr.onerror = handleEventError;
+    xhr.send();
+}
+
+function handleEventError() {
+    const statusEl = document.getElementById('event-status');
+    const nameEl = document.getElementById('event-name');
+    const effectEl = document.getElementById('event-effect');
+    state.dailyEvent = { name: '🌤️ Normal', effect: 'none', value: 1.0 };
+    if (statusEl) statusEl.textContent = 'Evento: Normal';
+    if (nameEl) nameEl.textContent = '🌤️ Normal';
+    if (effectEl) effectEl.textContent = '0%';
+}
+
+// Frase Motivacional
+function fetchMotivationalQuote() {
+    const statusEl = document.getElementById('quote-status');
+    const quoteEl = document.getElementById('quote-text');
+    
+    if (!statusEl || !quoteEl) {
+        console.warn('Elementos de frase no encontrados en DOM');
+        setTimeout(fetchMotivationalQuote, 500);
+        return;
+    }
+    
+    statusEl.textContent = 'Frase: cargando...';
+
+    const xhr = new XMLHttpRequest();
+    const randomId = Math.floor(Math.random() * 100) + 1;
+    xhr.open('GET', `https://jsonplaceholder.typicode.com/comments/${randomId}`);
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                    const data = JSON.parse(xhr.responseText);
+                    // Usamos las frases predefinidas inspiradoras
+                    const quotes = [
+                        '🐑 "La lana no se esquila sola, ¡sigue adelante!"',
+                        '✨ "Cada clic te acerca a la grandeza."',
+                        '🎯 "El éxito es la suma de pequeños esfuerzos."',
+                        '💪 "No cuentes las ovejas, esquílalas."',
+                        '🌟 "Tu granja, tus reglas."',
+                        '🚀 "El cielo es el límite en la industria lanera."',
+                        '⚡ "La perseverancia esquila montañas de lana."',
+                        '🏆 "Cada oveja esquilada es una victoria."',
+                        '💎 "La lana de hoy es el oro de mañana."',
+                        '🔥 "Arde con pasión por la lana."',
+                    ];
+                    
+                    const quoteIndex = data.id % quotes.length;
+                    state.motivationalQuote = quotes[quoteIndex];
+                    
+                    statusEl.textContent = 'Frase: actualizada';
+                    document.getElementById('quote-text').textContent = state.motivationalQuote;
+                    addLog('Nueva frase motivacional recibida.');
+                } catch (err) {
+                    handleQuoteError();
+                }
+            } else {
+                handleQuoteError();
+            }
+        }
+    };
+    xhr.onerror = handleQuoteError;
+    xhr.send();
+}
+
+function handleQuoteError() {
+    const statusEl = document.getElementById('quote-status');
+    const quoteEl = document.getElementById('quote-text');
+    state.motivationalQuote = '🐑 "Sigue esquilando..."';
+    if (statusEl) statusEl.textContent = 'Frase: lista';
+    if (quoteEl) quoteEl.textContent = state.motivationalQuote;
 }
 
 function updateHud() {

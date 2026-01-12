@@ -29,6 +29,32 @@ body {
     overflow: hidden;
 }
 
+/* Materialize overrides: keep our custom layout/styles intact */
+.shell .btn,
+.shell .btn-small,
+.shell .btn-flat {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: auto;
+    line-height: 1.1;
+    padding: 12px 16px;
+    margin: 0;
+    border-radius: 12px;
+    box-shadow: none;
+    text-transform: none;
+    font-family: inherit;
+    font-weight: 700;
+    background: transparent;
+    color: inherit;
+}
+.shell .btn:focus,
+.shell .btn-small:focus,
+.shell .btn-flat:focus {
+    outline: none;
+}
+.shell .waves-effect { position: relative; overflow: hidden; }
+
 .shell {
     position: relative;
     width: 100vw;
@@ -243,30 +269,33 @@ button:focus-visible { outline: 2px solid #e9c16a; outline-offset: 2px; }
 }
 
 /* Modals */
-.modal {
+.shell .modal {
     position: fixed;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.55);
-    display: flex;
+    display: flex !important; /* override Materialize display none */
     justify-content: center;
     align-items: center;
     z-index: 100;
     opacity: 1;
+    visibility: visible;
     transition: opacity 0.3s ease;
     padding: 16px;
     box-sizing: border-box;
+    transform: none; /* prevent Materialize scale animations */
+    pointer-events: auto;
 }
 
-.modal.hidden {
-    display: none;
+.shell .modal.hidden {
+    display: none !important;
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
 }
 
-.modal-content {
+.shell .modal .modal-content {
     background: linear-gradient(135deg, #f7eddc 0%, #f0dfc4 100%);
     border-radius: 18px;
     padding: 28px;
@@ -278,16 +307,13 @@ button:focus-visible { outline: 2px solid #e9c16a; outline-offset: 2px; }
     max-height: 82vh;
     overflow-y: auto;
     border: 2px solid #cfa15f;
-}
-
-.modal-content h2 {
+.shell .modal .modal-content h2 {
     margin-top: 0;
     margin-bottom: 12px;
     font-size: 26px;
     color: #3b250f;
 }
-
-.modal-content p {
+.shell .modal .modal-content p {
     margin: 10px 0;
     font-size: 14px;
     line-height: 1.5;

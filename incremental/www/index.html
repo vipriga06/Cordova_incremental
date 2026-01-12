@@ -20,7 +20,7 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://jsonplaceholder.typicode.com data:; script-src 'self' https://jsonplaceholder.typicode.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; media-src *; img-src 'self' data: content: blob:;">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://jsonplaceholder.typicode.com data:; script-src 'self' https://jsonplaceholder.typicode.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; media-src *; img-src 'self' data: content: blob:; connect-src 'self' https://jsonplaceholder.typicode.com;">
         <meta name="format-detection" content="telephone=no">
         <meta name="msapplication-tap-highlight" content="no">
         <meta name="viewport" content="initial-scale=1, width=device-width, viewport-fit=cover">
@@ -84,6 +84,18 @@
                         <p class="label">Bonus</p>
                         <p class="value" id="bonus">x1.0</p>
                     </div>
+                    <div class="stat">
+                        <p class="label">Precio Mercado</p>
+                        <p class="value" id="market-price">$1.00</p>
+                    </div>
+                    <div class="stat">
+                        <p class="label">Evento</p>
+                        <p class="value" id="event-name">-</p>
+                    </div>
+                    <div class="stat">
+                        <p class="label">Efecto</p>
+                        <p class="value" id="event-effect">0%</p>
+                    </div>
                 </section>
             </div>
 
@@ -91,16 +103,23 @@
                 <section class="controls">
                     <button id="shear-btn" class="primary btn waves-effect waves-light">Esquilar oveja</button>
                     <button id="upgrade-btn" class="ghost btn waves-effect">Mejorar tijeras</button>
-                    <button id="refresh-bonus" class="secondary btn waves-effect">Refrescar bonus (AJAX)</button>
+                    <button id="refresh-bonus" class="secondary btn waves-effect">Refrescar bonus</button>
+                    <button id="refresh-market" class="secondary btn waves-effect">Actualizar mercado</button>
+                    <button id="refresh-event" class="secondary btn waves-effect">Consultar evento</button>
+                    <button id="refresh-quote" class="secondary btn waves-effect">Nueva frase</button>
                 </section>
             </div>
 
             <div class="overlay top-right">
                 <div class="info-card">
-                    <p class="eyebrow">Mini incremental</p>
+                    <p class="eyebrow">Mini incremental con AJAX</p>
                     <h1>Granja de ovejas</h1>
-                    <p class="lede">Haz clic en la oveja para esquilarla, vende lana y mejora tus tijeras. El bonus diario llega por AJAX.</p>
+                    <p class="lede">Haz clic en la oveja para esquilarla. Múltiples datos llegan por AJAX en tiempo real.</p>
                     <div class="badge" id="api-status">Bonus API: buscando...</div>
+                    <div class="badge" id="market-status">Mercado: consultando...</div>
+                    <div class="badge" id="event-status">Evento: cargando...</div>
+                    <div class="badge" id="quote-status">Frase: cargando...</div>
+                    <div style="margin-top: 10px; font-style: italic; font-size: 0.9em;" id="quote-text">🐑 "Cargando motivación..."</div>
                 </div>
             </div>
 
